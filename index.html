@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Modern Galeri Sitesi</title>
+    <style>
+        /* Temel stil ayarları */
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f2f2f2;
+        }
+
+        /* Başlık stili */
+        header {
+            background-color: #333;
+            padding: 20px;
+            text-align: center;
+            color: #fff;
+        }
+
+        /* Galeri bölümü */
+        .gallery {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            margin: 20px;
+        }
+
+        /* Resim kutusu stili */
+        .gallery-item {
+            width: 300px;
+            margin: 10px;
+            border-radius: 5px;
+            overflow: hidden;
+            position: relative; /* Eklenen: Konumu belirlemek için */
+        }
+
+        /* Resim stili */
+        .gallery-item img {
+            width: 100%;
+            height: auto;
+        }
+
+        /* İndirme ve silme butonlarının ortalanması */
+        .button-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0, 0, 0, 0.5);
+            opacity: 0; /* Eklenen: Başlangıçta görünmez */
+            transition: opacity 0.3s ease-in-out; /* Eklenen: Geçiş efekti */
+        }
+
+        /* İndirme ve silme butonlarının görünür hale gelmesi */
+        .gallery-item:hover .button-container {
+            opacity: 1; /* Eklenen: Mouse üzerine gelindiğinde görünür */
+        }
+
+        /* İndirme ve silme butonları */
+        .button-container button {
+            background-color: #333;
+            color: #fff;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 3px;
+            cursor: pointer;
+            margin: 5px;
+        }
+
+        /* Başlık stili */
+        .gallery-item h3 {
+            text-align: center;
+            padding: 10px;
+            margin: 0;
+            background-color: #333;
+            color: #fff;
+        }
+
+        /* Yükleme formu stili */
+        .upload-form {
+            text-align: center;
+            margin: 20px;
+        }
+
+        /* Dosya yükleme butonu stili */
+        .upload-button {
+            display: inline-block;
+            background-color: #333;
+            color: #fff;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s ease-in-out;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+
+<body>
+    <header>
+        <h1>Modern Galeri Sitesi</h1>
+    </header>
+
+    <div class="gallery" id="image-gallery">
+        <!-- Galeri resimleri -->
+    </div>
+
+    <!-- Yükleme formu -->
+    <div class="upload-form">
+        <label for="upload-input" class="upload-button">Resim Yükle</label>
+        <input type="file" id="upload-input" style="display: none;" onchange="uploadImage()">
+    </div>
+
+    <script>
+        function uploadImage() {
+            var input = document.getElementById('upload-input');
+            var file = input.files[0];
+            var reader = new FileReader();
+
+            reader.onloadend = function () {
+                var img = document.createElement('img');
+                img.src = reader.result;
+
+                var galleryItem = document.createElement('div');
+                galleryItem.classList.add('gallery-item');
+                galleryItem.appendChild(img);
+
+                var buttonContainer = document.createElement('div');
+                buttonContainer.classList.add('button-container');
+
+                var downloadButton = document.createElement('button');
+                downloadButton.innerText = 'İndir';
+                downloadButton.addEventListener('click', function () {
+                    downloadImage(img.src);
+                });
+                buttonContainer.appendChild(downloadButton);
+
+                var deleteButton = document.createElement('button');
+                deleteButton.innerText = 'Sil';
+                deleteButton.addEventListener('click', function () {
+                    deleteImage(galleryItem);
+                });
+                buttonContainer.appendChild(deleteButton);
+
+                galleryItem.appendChild(buttonContainer);
+
+                var gallery = document.getElementById('image-gallery');
+                gallery.appendChild(galleryItem);
+
+                // Resmi yerel depolamaya kaydet
+                saveToLocalStorage(reader.result);
+            }
+
+            if (file) {
+                reader.readAsDataURL(file);
+            }
+        }
+
+        function downloadImage(imageUrl) {
+            var a = document.createElement('a');
+            a.href = imageUrl;
+            a.download = 'image.jpg';
+            a.target = '_blank';
+            a.click();
+        }
+
+        function deleteImage(galleryItem) {
+            var gallery = document.getElementById('image-gallery');
+            gallery.removeChild(galleryItem);
+
+            var images = localStorage.getItem('galleryImages');
+
+            if (images) {
+                images = JSON.parse(images);
+                var imageData = galleryItem.firstChild.src;
+
+                var index = images.indexOf(imageData);
+                if (index > -1) {
+                    images.splice(index, 1);
+                    localStorage.setItem('galleryImages', JSON.stringify(images));
+                }
+            }
+        }
+
+        function saveToLocalStorage(imageData) {
+            var images = localStorage.getItem('galleryImages');
+
+            if (images) {
+                images = JSON.parse(images);
+            } else {
+                images = [];
+            }
+
+            images.push(imageData);
+            localStorage.setItem('galleryImages', JSON.stringify(images));
+        }
+
+        function loadFromLocalStorage() {
+            var images = localStorage.getItem('galleryImages');
+
+            if (images) {
+                images = JSON.parse(images);
+
+                var gallery = document.getElementById('image-gallery');
+
+                images.forEach(function (imageData) {
+                    var img = document.createElement('img');
+                    img.src = imageData;
+
+                    var galleryItem = document.createElement('div');
+                    galleryItem.classList.add('gallery-item');
+                    galleryItem.appendChild(img);
+
+                    var buttonContainer = document.createElement('div');
+                    buttonContainer.classList.add('button-container');
+
+                    var downloadButton = document.createElement('button');
+                    downloadButton.innerText = 'İndir';
+                    downloadButton.addEventListener('click', function () {
+                        downloadImage(img.src);
+                    });
+                    buttonContainer.appendChild(downloadButton);
+
+                    var deleteButton = document.createElement('button');
+                    deleteButton.innerText = 'Sil';
+                    deleteButton.addEventListener('click', function () {
+                        deleteImage(galleryItem);
+                    });
+                    buttonContainer.appendChild(deleteButton);
+
+                    galleryItem.appendChild(buttonContainer);
+
+                    gallery.appendChild(galleryItem);
+                });
+            }
+        }
+const express = require('express');
+const multer = require('multer');
+const fs = require('fs');
+
+const app = express();
+const upload = multer({ dest: 'uploads/' });
+
+app.use(express.static('public'));
+
+app.post('/upload', upload.single('file'), (req, res) => {
+  const file = req.file;
+
+  if (!file) {
+    res.status(400).send('Dosya yüklenemedi.');
+    return;
+  }
+
+  const fileItem = {
+    name: file.originalname,
+    path: file.path,
+  };
+
+  addFileToDatabase(fileItem);
+  res.send('Dosya başarıyla yüklendi.');
+});
+
+app.get('/files', (req, res) => {
+  const files = getFilesFromDatabase();
+  res.json(files);
+});
+
+app.listen(3000, () => {
+  console.log('Sunucu çalışıyor...');
+});
+
+function addFileToDatabase(fileItem) {
+  const files = getFilesFromDatabase();
+  files.push(fileItem);
+  saveFilesToDatabase(files);
+}
+
+function getFilesFromDatabase() {
+  try {
+    const data = fs.readFileSync('Croxydb.json');
+    return JSON.parse(data);
+  } catch (error) {
+    console.error('Veritabanına erişilemedi:', error);
+    return [];
+  }
+}
+
+function saveFilesToDatabase(files) {
+  const data = JSON.stringify(files, null, 2);
+  fs.writeFileSync('Croxydb.json', data);
+}
+
+        // Sayfa yüklendiğinde yerel depodan resimleri yükle
+        loadFromLocalStorage();
+    </script>
+</body>
+
+</html>
